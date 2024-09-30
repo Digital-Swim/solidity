@@ -17,9 +17,12 @@ contract VulnerableBank {
 
         (bool success, ) = msg.sender.call{value: amount}("");
         require(success, "Transfer failed.");
-
-        console.log("Transfer successful");
-        balances[msg.sender] -= amount;
+        
+        if (balances[msg.sender] >= amount) {
+            balances[msg.sender] -= amount;
+        } else {
+            balances[msg.sender] = 0;
+        }
     }
 
     function getBalance() public view returns (uint256) {

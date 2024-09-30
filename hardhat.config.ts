@@ -10,12 +10,6 @@ const config: HardhatUserConfig = {
         runs: 200,
       },
     },
-  },
-  gasReporter: {
-    enabled: true,
-    currency: "USD",
-    currencyDisplayPrecision: 10,
-    includeIntrinsicGas: true
   }
 };
 

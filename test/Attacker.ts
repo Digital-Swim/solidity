@@ -13,30 +13,35 @@ async function deployFixture() {
 
     const VulnerableBank = await ethers.getContractFactory("VulnerableBank", owner);
     const vulnerableBank = await VulnerableBank.deploy();
+    const vulnerableBankAddress = await vulnerableBank.getAddress();
 
     const Attacker = await ethers.getContractFactory("Attacker", attackerAccount);
-    const attacker = await Attacker.deploy(vulnerableBank.getAddress());
+    const attacker = await Attacker.deploy(vulnerableBankAddress);
 
     await owner.sendTransaction({
-        to: vulnerableBank.getAddress(),
+        to: vulnerableBankAddress,
         value: ethers.parseEther("10")
     });
 
-    expect(await hre.ethers.provider.getBalance(vulnerableBank.getAddress())).to.equal(
+    expect(await hre.ethers.provider.getBalance(vulnerableBankAddress)).to.equal(
         ethers.parseEther("10")
     );
 
-    return { vulnerableBank, attacker, owner, attackerAccount };
+    return { vulnerableBank, vulnerableBankAddress, attacker, owner, attackerAccount };
 }
 
 describe("VulnerableBank", function () {
     it("should be vulnerable to reentrancy attack", async function () {
         const { ethers } = hre;
-        const { vulnerableBank, attacker, owner, attackerAccount } = await loadFixture(deployFixture);
+        const { vulnerableBank, attacker, owner, vulnerableBankAddress, attackerAccount } = await loadFixture(deployFixture);
 
-        await attacker.connect(attackerAccount).attack({ value: ethers.parseEther("1") });
+        expect(await hre.ethers.provider.getBalance(vulnerableBankAddress)).to.equal(
+            ethers.parseEther("10")
+        );
 
-        const vulnerableBalance = await ethers.provider.getBalance(vulnerableBank.getAddress());
+        await expect(attacker.connect(attackerAccount).attack({ value: ethers.parseEther("1") })).to.not.be.reverted;
+
+        const vulnerableBalance = await ethers.provider.getBalance(vulnerableBankAddress);
         console.log("Vulnerable Bank Balance after attack: ", vulnerableBalance.toString());
 
         // Check the balance of the attacker contract after the attack
@@ -45,5 +50,6 @@ describe("VulnerableBank", function () {
 
         // Attacker should have drained more than 1 Ether from the vulnerable contract
         expect(vulnerableBalance).to.be.lt(ethers.parseEther("9"));
+
     });
 });
